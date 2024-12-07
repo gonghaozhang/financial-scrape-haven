@@ -12,9 +12,9 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  const { data: articles = [], isLoading } = useQuery({
-    queryKey: ['news', selectedCategory],
-    queryFn: () => searchNews(selectedCategory),
+  const { data: articles = [], isLoading, refetch } = useQuery({
+    queryKey: ['news', selectedCategory, searchQuery],
+    queryFn: () => searchNews(selectedCategory, searchQuery),
     initialData: [],
     staleTime: 5 * 60 * 1000,
     meta: {
@@ -31,11 +31,14 @@ const Index = () => {
     }
   });
 
-  const filteredArticles = articles.filter((article) => {
-    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         article.summary.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      refetch();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, refetch]);
 
   return (
     <div className="min-h-screen bg-primary text-primary-foreground p-6">
@@ -50,9 +53,11 @@ const Index = () => {
 
         {isLoading ? (
           <div className="text-center py-10">加载新闻中...</div>
+        ) : articles.length === 0 ? (
+          <div className="text-center py-10">没有找到相关新闻</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredArticles.map((article) => (
+            {articles.map((article) => (
               <NewsCard key={article.id} article={article} />
             ))}
           </div>

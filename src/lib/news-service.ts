@@ -4,9 +4,15 @@ import { NewsArticle } from '@/types/news';
 const BING_API_KEY = import.meta.env.VITE_BING_API_KEY;
 const BING_ENDPOINT = 'https://api.bing.microsoft.com/v7.0/news/search';
 
-export async function searchNews(category: string = ''): Promise<NewsArticle[]> {
+export async function searchNews(category: string = '', searchQuery: string = ''): Promise<NewsArticle[]> {
   try {
-    const query = category === 'all' ? 'financial news' : `${category} financial news`;
+    let query = searchQuery ? searchQuery : 'financial news';
+    if (category !== 'all') {
+      query += ` ${category}`;
+    }
+    
+    console.log('Searching for:', query); // Debug log
+
     const response = await fetch(`${BING_ENDPOINT}?q=${encodeURIComponent(query)}&count=10`, {
       headers: {
         'Ocp-Apim-Subscription-Key': BING_API_KEY
@@ -18,6 +24,8 @@ export async function searchNews(category: string = ''): Promise<NewsArticle[]> 
     }
 
     const data = await response.json();
+    console.log('API response:', data); // Debug log
+
     const articles: NewsArticle[] = data.value.map((item: any) => ({
       id: item.name,
       title: item.name,
