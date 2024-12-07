@@ -12,19 +12,21 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  const { data: articles = [], isLoading, error } = useQuery({
+  const { data: articles = [], isLoading } = useQuery({
     queryKey: ['news', selectedCategory],
     queryFn: () => searchNews(selectedCategory),
     initialData: [],
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to fetch news articles. Showing stored articles instead.",
-        variant: "destructive",
-      });
-      return getStoredArticles();
-    },
+    staleTime: 5 * 60 * 1000,
+    meta: {
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to fetch news articles. Showing stored articles instead.",
+          variant: "destructive",
+        });
+        return getStoredArticles();
+      }
+    }
   });
 
   const filteredArticles = articles.filter((article) => {
