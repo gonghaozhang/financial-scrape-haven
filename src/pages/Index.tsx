@@ -18,13 +18,15 @@ const Index = () => {
     initialData: [],
     staleTime: 5 * 60 * 1000,
     meta: {
-      onError: () => {
-        toast({
-          title: "Error",
-          description: "Failed to fetch news articles. Showing stored articles instead.",
-          variant: "destructive",
-        });
-        return getStoredArticles();
+      onSettled: (data, error) => {
+        if (error) {
+          toast({
+            title: "错误",
+            description: "获取新闻文章失败。显示已存储的文章。",
+            variant: "destructive",
+          });
+          return getStoredArticles();
+        }
       }
     }
   });
@@ -38,7 +40,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-primary text-primary-foreground p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Financial News Center</h1>
+        <h1 className="text-3xl font-bold mb-8">金融新闻中心</h1>
         
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
         <CategoryFilter
@@ -47,7 +49,7 @@ const Index = () => {
         />
 
         {isLoading ? (
-          <div className="text-center py-10">Loading news...</div>
+          <div className="text-center py-10">加载新闻中...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredArticles.map((article) => (
