@@ -36,8 +36,14 @@ export async function searchNews(category: string = '', searchQuery: string = ''
       publishedAt: item.datePublished
     }));
 
-    // Store articles in Supabase
-    await storeArticles(articles);
+    // Try to store articles, but don't fail if storage fails
+    try {
+      await storeArticles(articles);
+    } catch (error) {
+      console.error('Failed to store articles:', error);
+      // Continue execution even if storage fails
+    }
+    
     return articles;
   } catch (error) {
     console.error('Error fetching news:', error);
@@ -46,6 +52,18 @@ export async function searchNews(category: string = '', searchQuery: string = ''
 }
 
 export async function storeArticles(articles: NewsArticle[]) {
+  // First check if the table exists
+  const { error: tableError } = await supabase
+    .from('news_articles')
+    .select('id')
+    .limit(1);
+
+  // If table doesn't exist, skip storage
+  if (tableError) {
+    console.error('News articles table not found. Please create the table first.');
+    return;
+  }
+
   const { error } = await supabase
     .from('news_articles')
     .upsert(
@@ -63,6 +81,7 @@ export async function storeArticles(articles: NewsArticle[]) {
 
   if (error) {
     console.error('Error storing articles:', error);
+    throw error;
   }
 }
 
